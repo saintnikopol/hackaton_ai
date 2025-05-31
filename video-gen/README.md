@@ -31,7 +31,7 @@ This is a Node.js server that uses the Fal AI Text-to-Speech API to generate spe
 1. **GET /**: Welcome message
 2. **GET /health**: Health check
 3. **POST /audiogen**: Generate speech for given text ( passed as a payload like `{"text":...}` )
-4. **POST /videogen**: Generate the final video from the audio and the sample video ( passed as a payload like `{"video":"", "audio":""}` )
+4. **POST /videogen**: Generate the final video from the audio and the sample video (passed as a payload like `{"video":"", "audio":""}`)
 
 ## Test and Sample Text
 
