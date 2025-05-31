@@ -1,0 +1,5 @@
+# NodeJs related stuff
+node_modules/
+
+# Hidden important files
+.env
