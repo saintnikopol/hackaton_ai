@@ -20,6 +20,10 @@
     "dist:linux": "pnpm run tsc:electron && pnpm run build && cross-env NODE_ENV=production electron-builder --linux --x64"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@fontsource/roboto": "^5.2.5",
+    "@mui/material": "^7.1.0",
     "os-utils": "^0.0.14",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
