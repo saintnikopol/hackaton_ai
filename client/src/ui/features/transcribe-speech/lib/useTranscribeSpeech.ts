@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useId } from "react";
 
-export enum Status {
+export enum TranscriptionStatus {
   INITIAL_STATUS = "Click “Start” and allow microphone access.",
   CONNECTING = "Requesting microphone access & connecting to server…",
   SENDING_CONFIGURATION = "Connected! Sending configuration…",
@@ -22,11 +22,17 @@ interface WhisperMessage {
   }>;
 }
 
-export function useTranscribeSpeech() {
-  // ──────── State & Refs ────────────────────────────────────────────────────────
+export interface UseTranscribeSpeech {
+  onNewTranscriptionLine: (transcriptionLine: string) => void;
+}
+
+export function useTranscribeSpeech({
+  onNewTranscriptionLine,
+}: UseTranscribeSpeech) {
   const [isCapturing, setIsCapturing] = useState(false);
-  const [transcriptLines, setTranscriptLines] = useState<string[]>([]);
-  const [status, setStatus] = useState<Status>(Status.INITIAL_STATUS);
+  const [status, setStatus] = useState<TranscriptionStatus>(
+    TranscriptionStatus.INITIAL_STATUS,
+  );
 
   const audioId = useId(); // stable UID for this hook instance
   const isCapturingRef = useRef(false);
@@ -41,19 +47,15 @@ export function useTranscribeSpeech() {
     return () => {
       stopCapture();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ──────── Public API ────────────────────────────────────────────────────────────
   async function startCapture() {
     if (isCapturingRef.current) return;
 
-    // Clear any old transcripts, flip capturing flags
-    setTranscriptLines([]);
     setIsCapturing(true);
     isCapturingRef.current = true;
 
-    // 1) REQUEST MICROPHONE ACCESS
+    // request microphone access
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -65,23 +67,23 @@ export function useTranscribeSpeech() {
         },
       });
       mediaStreamRef.current = stream;
-      setStatus(Status.CONNECTING);
+      setStatus(TranscriptionStatus.CONNECTING);
     } catch (err) {
       console.error("Microphone access denied:", err);
-      setStatus(Status.MICROPHONE_ACCESS_DENIED);
+      setStatus(TranscriptionStatus.MICROPHONE_ACCESS_DENIED);
       setIsCapturing(false);
       isCapturingRef.current = false;
       return;
     }
 
-    // 2) CONNECT TO WEBSOCKET
-    //    (Change wsUrl if your server lives on a different host/port/path.)
+    // connect to websocket
+    // TODO: Change wsUrl
     const wsUrl = "ws://localhost:9090";
     const ws = new WebSocket(wsUrl);
     socketRef.current = ws;
 
     ws.onopen = () => {
-      setStatus(Status.SENDING_CONFIGURATION);
+      setStatus(TranscriptionStatus.SENDING_CONFIGURATION);
       const config = {
         uid: audioId,
         language: "en",
@@ -103,17 +105,16 @@ export function useTranscribeSpeech() {
 
     ws.onerror = (err) => {
       console.error("WebSocket error:", err);
-      setStatus(Status.SERVER_ERROR);
+      setStatus(TranscriptionStatus.SERVER_ERROR);
       // We keep “isCapturingRef” true until stopCapture() is called
     };
 
     ws.onclose = () => {
-      setStatus(Status.CONNECTION_CLOSED);
-      // Tear everything down:
+      setStatus(TranscriptionStatus.CONNECTION_CLOSED);
       stopCapture();
     };
 
-    // 3) SET UP AUDIO PROCESSING → resample → send PCM
+    // set up audio processing → resample → send PCM
     setupAudioProcessing();
   }
 
@@ -150,11 +151,9 @@ export function useTranscribeSpeech() {
       socketRef.current = null;
     }
 
-    // 5) Reset status (you could also leave the last “Connection closed” message)
-    setStatus(Status.INITIAL_STATUS);
+    setStatus(TranscriptionStatus.INITIAL_STATUS);
   }
 
-  // ──────── Internal Helpers ─────────────────────────────────────────────────────
   function handleServerMessage(msg: WhisperMessage) {
     // 1) Ignore messages for other UIDs
     if (msg.uid !== audioId) return;
@@ -163,26 +162,26 @@ export function useTranscribeSpeech() {
     if (msg.status === "WAIT") {
       const waitMins =
         typeof msg.message === "number" ? Math.round(msg.message) : "";
-      setStatus(Status.SERVER_BUSY);
+      setStatus(TranscriptionStatus.SERVER_BUSY);
       console.warn(`Server busy. Estimated wait: ${waitMins} minutes`);
       stopCapture();
       return;
     }
 
     if (msg.status === "ERROR") {
-      setStatus(Status.SERVER_ERROR);
+      setStatus(TranscriptionStatus.SERVER_ERROR);
       console.error("Server error message:", msg.message);
       return;
     }
 
     if (msg.message === "SERVER_READY") {
-      setStatus(Status.ACTIVE);
+      setStatus(TranscriptionStatus.ACTIVE);
       // At this point, the server is ready to receive PCM chunks
       return;
     }
 
     if (msg.message === "DISCONNECT") {
-      setStatus(Status.CONNECTION_CLOSED);
+      setStatus(TranscriptionStatus.CONNECTION_CLOSED);
       stopCapture();
       return;
     }
@@ -190,15 +189,14 @@ export function useTranscribeSpeech() {
     if (msg.language) {
       // Sometimes the server will send back a detected language
       setStatus(
-        `🎤 Recording… (Detected: ${msg.language})` as unknown as Status,
+        `🎤 Recording… (Detected: ${msg.language})` as unknown as TranscriptionStatus,
       );
       return;
     }
 
     if (msg.segments && msg.segments.length > 0) {
-      // Each segment has .text and .completed. We'll just show the text lines.
-      const newLines = msg.segments.map((seg) => seg.text);
-      setTranscriptLines(newLines);
+      console.log(msg);
+      onNewTranscriptionLine(newLines[-1]);
     }
   }
 
@@ -244,7 +242,6 @@ export function useTranscribeSpeech() {
     originalSampleRate: number,
   ): Float32Array {
     if (originalSampleRate === 16000) {
-      // Already 16k, so just copy
       return new Float32Array(audioData);
     }
 
@@ -269,10 +266,8 @@ export function useTranscribeSpeech() {
     return resampledData;
   }
 
-  // ──────── Return value: what the component sees ─────────────────────────────────
   return {
     isCapturing,
-    transcriptLines,
     status,
     startCapture,
     stopCapture,
