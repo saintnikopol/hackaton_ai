@@ -1,0 +1,16 @@
+{
+  "appId": "com.team-ukraine.english-something",
+  "files": ["dist"],
+  "extraResources": ["dist/electron/preload.cjs"],
+  "directories": { "output": "release" },
+  "mac": {
+    "target": "dmg"
+  },
+  "linux": {
+    "target": "AppImage",
+    "category": "Utility"
+  },
+  "win": {
+    "target": ["portable", "msi"]
+  }
+}

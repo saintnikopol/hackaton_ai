@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "outDir": "./dist/electron",
+    "strict": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["./src/electron/preload.ts"]
+}
