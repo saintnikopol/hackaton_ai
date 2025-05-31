@@ -26,28 +26,36 @@ This is a Node.js server that uses the Fal AI Text-to-Speech API to generate spe
 
 1. Run the server in development mode: `npm run start`
 
-## Dependencies
+## API endpoints
 
-This project uses the following dependencies:
+1. **GET /**: Welcome message
+2. **GET /health**: Health check
+3. **POST /generate**: Generate speech for given text ( passed as a payload like `{"text":...}` )
 
-* `@fal-ai/client`: Fal AI client library
-* `dotenv`: Environment variable management
-* `express`: Web framework (not used in this example, but can be added)
+## Test and Sample Text
 
-## Output
+```sh
+TEXT="My name is Miss Lancaster."; curl -X POST -H "Content-Type: application/json" -d '{"text":"'"${TEXT}"'"}' localhost:3000/generate
+```
+
+or
+
+```sh
+TEXT="Hi. You've made some progress today. You've made a mistake, however. You said: I saw an dog in the park. That's not correct, you should have said: I saw a dog in the park. Remember, always use A. when the word starts with a consonant."
+# ...
+```
 
 The output should look something like the following snippet:
 
-```
-Generating speech for 'Hello World'...
-Speech generation completed!
-Audio URL: https://fal.media/files/rabbit/ZjZg66JQZTsV4WIxYBsf-_speech.mp3
-Duration: 1296 ms
-Request ID: f9179408-0cdb-45b1-9aa8-80de5e244d47
-Script completed successfully!
+```json
+{ "audioUrl": "https://fal.media/files/rabbit/ZjZg66JQZTsV4WIxYBsf-_speech.mp3", "durationMs": 936, "id": ".." }
 ```
 
 ## Contributing
+
+Ask the devs!
+
+## License
 
 Ask the devs!
 

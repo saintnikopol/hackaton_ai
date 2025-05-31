@@ -1,23 +1,43 @@
 import { fal } from "@fal-ai/client";
 import dotenv from 'dotenv';
+import express from 'express';
 
 
 dotenv.config(); // Load environment variables from .env file
 
-fal.config({
-  credentials: process.env.FAL_KEY
+const port = process.env.PORT || 3000;
+const key = process.env.FAL_KEY;
+
+fal.config({ credentials: key });
+
+const app = express();
+app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.send('Welcome to the API. Use GET / for health. Use POST /generate with the payload {text:...}');
 });
 
-async function generateSpeech() {
+app.get('/health', (req, res) => {
+  res.status(200).json({ response: "OK" });
+});
+
+app.post('/generate', async (req, res) => {
   try {
-    console.log("Generating speech for text from .env...");
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).send({ error: 'Text is required' });
+    }
+    console.log("Generating speech for text:", text);
 
     const result = await fal.subscribe("fal-ai/minimax/speech-02-turbo", {
       input: {
-        // text: "Hello World",
-        text: process.env.TEXT,
+        text,
         voice_setting: {
-          speed: 1.17, vol: 1, voice_id: "Wise_Woman", pitch: 0, english_normalization: false
+          speed: 1.19,
+          vol: 1,
+          voice_id: "Wise_Woman",
+          pitch: 0,
+          english_normalization: false
         },
         output_format: "url" // This will return a URL to the audio file
       },
@@ -31,22 +51,16 @@ async function generateSpeech() {
 
     console.log("Speech generation completed!");
     console.log("Audio URL:", result.data.audio.url);
-    console.log("Duration (ms):", result.data.duration_ms / 1000);
+    console.log("Duration:", result.data.duration_ms);
     console.log("Request ID:", result.requestId);
 
-    return result;
+    res.send({ audioUrl: result.data.audio.url, durationMs: result.data.duration_ms, id: result.requestId });
   } catch (error) {
     console.error("Error generating speech:", error);
-    throw error;
+    res.status(500).send({ error: 'Failed to generate speech' });
   }
-}
+});
 
-// Run the function
-generateSpeech()
-  .then(() => {
-    console.log("Script completed successfully!");
-  })
-  .catch((error) => {
-    console.error("Script failed:", error);
-    process.exit(1);
-  });
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}. Open HOST_NAME:${port}/ for more details.`);
+});
