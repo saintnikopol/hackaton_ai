@@ -21,7 +21,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({ response: "OK" });
 });
 
-app.post('/generate', async (req, res) => {
+app.post('/audiogen', async (req, res) => {
   try {
     const { text } = req.body;
     if (!text) {
@@ -58,6 +58,46 @@ app.post('/generate', async (req, res) => {
   } catch (error) {
     console.error("Error generating speech:", error);
     res.status(500).send({ error: 'Failed to generate speech' });
+  }
+});
+
+app.post('/videogen', async (req, res) => {
+  try {
+    const { video, audio } = req.body;
+    if (!video || !audio) {
+      return res.status(400).send({ error: 'Video and audio URLs are required' });
+    }
+    console.log("Generating video for video URL:", video);
+    console.log("Audio URL:", audio);
+
+    const result = await fal.subscribe("veed/lipsync", {
+      input: {
+        video_url: video,
+        audio_url: audio
+      },
+      logs: true,
+      onQueueUpdate: (update) => {
+        if (update.status === "IN_PROGRESS") {
+          update.logs.map((log) => log.message).forEach(l => {
+            if (l) console.log(l);
+          });
+        }
+      },
+    });
+
+    const { url, file_name: fileName, file_size: fileSize } = result?.data?.video;
+    const reqId = result?.requestId;
+
+    console.log("Video generation completed!");
+    console.log("Url:", url);
+    console.log("File Name:", fileName);
+    console.log("File Size:", fileSize);
+    console.log("Request ID:", reqId);
+
+    res.send({ url, fileName, fileSize, reqId });
+  } catch (error) {
+    console.error("Error generating video:", error);
+    res.status(500).send({ error: 'Failed to generate video' });
   }
 });
 

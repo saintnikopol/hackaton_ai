@@ -26,16 +26,18 @@ This is a Node.js server that uses the Fal AI Text-to-Speech API to generate spe
 
 1. Run the server in development mode: `npm run start`
 
-## API endpoints
+## API Endpoints
 
 1. **GET /**: Welcome message
 2. **GET /health**: Health check
-3. **POST /generate**: Generate speech for given text ( passed as a payload like `{"text":...}` )
+3. **POST /audiogen**: Generate speech for given text ( passed as a payload like `{"text":...}` )
+4. **POST /videogen**: Generate the final video from the audio and the sample video ( passed as a payload like `{"video":"", "audio":""}` )
 
 ## Test and Sample Text
 
 ```sh
-TEXT="My name is Miss Lancaster."; curl -X POST -H "Content-Type: application/json" -d '{"text":"'"${TEXT}"'"}' localhost:3000/generate
+TEXT="My name is Miss Lancaster.";
+curl -X POST -H "Content-Type: application/json" -d '{"text":"'"${TEXT}"'"}' localhost:3000/audiogen
 ```
 
 or
@@ -50,6 +52,23 @@ The output should look something like the following snippet:
 ```json
 { "audioUrl": "https://fal.media/files/rabbit/ZjZg66JQZTsV4WIxYBsf-_speech.mp3", "durationMs": 936, "id": ".." }
 ```
+
+Then, after that generate the video with:
+
+```sh
+VIDEO="https://fal.media/files/kangaroo/vUfCLHyM0RYpusebYzLV-_output.mp4";
+AUDIO="https://fal.media/files/rabbit/ZjZg66JQZTsV4WIxYBsf-_speech.mp3";
+curl -X POST -H "Content-Type: application/json" -d '{"video":"'"${VIDEO}"'","audio":"'"${AUDIO}"'"}' localhost:3000/videogen
+```
+
+The output should look something like:
+
+```json
+{ "url": "https://v3.fal.media/files/lion/_MG5LcesHWLcT0GcI0y5A_tmp4ddcpuxz.mp4",
+  "fileName": "tmp4ddcpuxz.mp4", "fileSize": 9417531, "reqId": "1cd13442-7483-4c56-baaa-ac0a4803e6e3" }
+```
+
+**Note**: This step will take about **25 seconds**!
 
 ## Contributing
 
