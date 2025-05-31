@@ -68,7 +68,21 @@ The output should look something like:
   "fileName": "tmp4ddcpuxz.mp4", "fileSize": 9417531, "reqId": "1cd13442-7483-4c56-baaa-ac0a4803e6e3" }
 ```
 
-**Note**: This step will take about **25 seconds**!
+Or using the all-in-one endpoint:
+
+```sh
+TEXT="Hi. You've made some progress today. You've made a mistake, however. You said: I saw an dog in the park. That's not correct, you should have said: I saw a dog in the park. Remember, always use A. when the word starts with a consonant."
+curl -X POST -H "Content-Type: application/json" -d '{"text":"'"${TEXT}"'"}' localhost:3000/audiovideogen
+```
+
+The output should output, aga, something like:
+
+```json
+{ "url": "https://v3.fal.media/files/lion/_MG5LcesHWLcT0GcI0y5A_tmp4ddcpuxz.mp4",
+  "fileName": "tmp4ddcpuxz.mp4", "fileSize": 9417531, "reqId": "1cd13442-7483-4c56-baaa-ac0a4803e6e3" }
+```
+
+**Note**: This last step will take about **24 seconds**!
 
 ## Contributing
 
