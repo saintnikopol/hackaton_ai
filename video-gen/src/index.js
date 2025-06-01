@@ -1,7 +1,6 @@
 import { fal } from "@fal-ai/client";
-import dotenv from 'dotenv';
-import express from 'express';
-
+import dotenv from "dotenv";
+import express from "express";
 
 dotenv.config();
 
@@ -39,16 +38,18 @@ async function generateSpeech(req) {
         vol: 1,
         voice_id: "Wise_Woman",
         pitch: 0,
-        english_normalization: false
+        english_normalization: false,
       },
-      output_format: "url"
+      output_format: "url",
     },
     logs: true,
     onQueueUpdate: (update) => {
       if (update.status === "IN_PROGRESS") {
-        update.logs.map((log) => log.message).forEach(l => {
-          if (l) console.log(l);
-        });
+        update.logs
+          .map((log) => log.message)
+          .forEach((l) => {
+            if (l) console.log(l);
+          });
       }
     },
   });
@@ -58,7 +59,11 @@ async function generateSpeech(req) {
   console.log("Duration:", result.data.duration_ms);
   console.log("Request ID:", result.requestId);
 
-  return { audioUrl: result.data.audio.url, durationMs: result.data.duration_ms, id: result.requestId }
+  return {
+    audioUrl: result.data.audio.url,
+    durationMs: result.data.duration_ms,
+    id: result.requestId,
+  };
 }
 
 async function generateVideo(req) {
@@ -69,14 +74,16 @@ async function generateVideo(req) {
   const result = await fal.subscribe("veed/lipsync", {
     input: {
       video_url: video,
-      audio_url: audio
+      audio_url: audio,
     },
     logs: true,
     onQueueUpdate: (update) => {
       if (update.status === "IN_PROGRESS") {
-        update.logs.map((log) => log.message).forEach(l => {
-          if (l) console.log(l);
-        });
+        update.logs
+          .map((log) => log.message)
+          .forEach((l) => {
+            if (l) console.log(l);
+          });
       }
     },
   });
@@ -90,70 +97,74 @@ async function generateVideo(req) {
   console.log("File Size:", fileSize);
   console.log("Request ID:", reqId);
 
-  return { url, fileName, fileSize, reqId }
+  return { url, fileName, fileSize, reqId };
 }
 
-app.get('/', (req, res) => {
-  res.send('Welcome to the API. Use GET / for health. Use POST /audiogen OR /videogen OR /audiovideogen with the correct payload');
+app.get("/", (req, res) => {
+  res.send(
+    "Welcome to the API. Use GET / for health. Use POST /audiogen OR /videogen OR /audiovideogen with the correct payload",
+  );
 });
 
-app.get('/health', (req, res) => {
+app.get("/health", (req, res) => {
   res.status(200).json({ response: "OK" });
 });
 
-app.post('/audiogen', async function(req, res) {
+app.post("/audiogen", async function (req, res) {
   try {
     if (!req.body.text) {
-      res.status(400).send({ error: 'Text is required' });
+      res.status(400).send({ error: "Text is required" });
     }
     const result = await generateSpeech(req);
     res.send(result);
   } catch (error) {
     console.error("Error generating speech:", error);
-    res.status(500).send({ error: 'Failed to generate speech' });
+    res.status(500).send({ error: "Failed to generate speech" });
   }
 });
 
-app.post('/videogen', async function(req, res) {
+app.post("/videogen", async function (req, res) {
   try {
     if (!req.body.video) {
-      res.status(400).send({ error: 'Video is required' });
+      res.status(400).send({ error: "Video is required" });
     }
     if (!req.body.audio) {
-      res.status(400).send({ error: 'Audio is required' });
+      res.status(400).send({ error: "Audio is required" });
     }
     const result = await generateVideo(req);
     res.send(result);
   } catch (error) {
     console.error("Error generating video:", error);
-    res.status(500).send({ error: 'Failed to generate video' });
+    res.status(500).send({ error: "Failed to generate video" });
   }
 });
 
-app.post('/audiovideogen', async function(req, res) {
+app.post("/audiovideogen", async function (req, res) {
   try {
     if (!req.body.text) {
-      res.status(400).send({ error: 'Text is required' });
+      res.status(400).send({ error: "Text is required" });
     }
     const speechResult = await generateSpeech(req);
-    console.log('Step ONE completed!');
+    console.log("Step ONE completed!");
     const audioUrl = speechResult?.audioUrl;
     const videoReq = {
       body: {
         video: videoTemplate,
-        audio: audioUrl
-      }
+        audio: audioUrl,
+      },
     };
     const videoResult = await generateVideo(videoReq);
-    console.log('Step TWO completed!');
-    console.log('DONE!');
+    console.log("Step TWO completed!");
+    console.log("DONE!");
     res.send(videoResult);
   } catch (error) {
     console.error("Error generating video from text:", error);
-    res.status(500).send({ error: 'Failed to generate video from text' });
+    res.status(500).send({ error: "Failed to generate video from text" });
   }
 });
 
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}. Open HOST_NAME:${port}/ for more details.`);
+  console.log(
+    `Server listening on port ${port}. Open HOST_NAME:${port}/ for more details.`,
+  );
 });
