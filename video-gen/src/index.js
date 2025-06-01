@@ -7,7 +7,9 @@ dotenv.config();
 
 const port = process.env.PORT || 3000;
 const key = process.env.FAL_KEY;
-const videoTemplate = 'https://fal.media/files/kangaroo/vUfCLHyM0RYpusebYzLV-_output.mp4';
+// const videoTemplateOldTeacherWithBooks = 'https://fal.media/files/kangaroo/vUfCLHyM0RYpusebYzLV-_output.mp4';
+const videoTemplate = 'https://fal.media/files/monkey/IDnHBwAlF8NsofTPXjJ6Q_output.mp4';
+// const videoTemplateStock = 'https://v3.fal.media/files/penguin/tIM1uE8SVOfUXqYWITAfE_foreground.mp4';
 
 fal.config({ credentials: key });
 
