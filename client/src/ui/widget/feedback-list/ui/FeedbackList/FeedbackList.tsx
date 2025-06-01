@@ -1,12 +1,55 @@
 import { Alert, Button, Stack, Paper, Typography } from "@mui/material";
-import { useTranscribeSpeech } from "@/features/transcribe-speech";
-import { useState } from "react";
+import {
+  useTranscribeSpeech,
+  type UseTranscribeSpeechProps,
+} from "@/features/transcribe-speech";
+import { useCallback, useEffect, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { analyseSegment } from "../../api/analyseSegment";
+import type { AnalyzeSegmentResponse } from "../../model/types/segmentFeedback";
 
 export function FeedbackList() {
+  const [transcriptionSegments, setTranscriptionSegments] = useState<string[]>(
+    [],
+  );
+  const [feedbacks, setFeedbacks] = useState<AnalyzeSegmentResponse[]>([]);
+
+  const mutation = useMutation({
+    mutationFn: analyseSegment,
+  });
+
+  const handleNewTranscriptionLine: UseTranscribeSpeechProps["onNewTranscriptionSegment"] =
+    useCallback(
+      (newSegment) => {
+        console.log("newSegment", newSegment);
+        if (newSegment.completed) {
+          // __AUTO_GENERATED_PRINT_VAR_START__
+          console.log(
+            "FeedbackList#(anon)#if newSegment.completed:",
+            newSegment.completed,
+          ); // __AUTO_GENERATED_PRINT_VAR_END__
+          setTranscriptionSegments((existingSegments) => [
+            ...existingSegments,
+            newSegment.text,
+          ]);
+          mutation.mutateAsync(newSegment.text).then((response) => {
+            // __AUTO_GENERATED_PRINT_VAR_START__
+            console.log("FeedbackList#(anon)#if#(anon) response:", response); // __AUTO_GENERATED_PRINT_VAR_END__
+            if (!response.hasError) return;
+            setFeedbacks((existingFeedbacks) => [
+              ...existingFeedbacks,
+              response,
+            ]);
+          });
+        }
+      },
+      [mutation],
+    );
+
   const { isCapturing, status, stopCapture, startCapture } =
-    useTranscribeSpeech({ onNewTranscriptionLine: () => {} });
-  const [transcriptionLines, setTranscriptionLines] = useState<string[]>([]);
-  const [feedbacks, setFeedbacks] = useState<string[]>([]);
+    useTranscribeSpeech({
+      onNewTranscriptionSegment: handleNewTranscriptionLine,
+    });
 
   return (
     <Paper
@@ -29,38 +72,27 @@ export function FeedbackList() {
 
         <Alert severity={isCapturing ? "info" : "warning"}>{status}</Alert>
 
-        <Paper
-          variant="outlined"
-          sx={{
-            p: 2,
-            minHeight: 120,
-            bgcolor: "#fafafa",
-            overflowY: "auto",
-          }}
-        >
-          {feedbacks.length === 0 ? (
-            <Typography
-              variant="body2"
-              color="textSecondary"
-              sx={{ fontStyle: "italic" }}
+        <Stack gap={2} sx={{ width: "100%" }}>
+          {feedbacks.map(({ original, correction, description }, idx) => (
+            <Alert
+              key={idx}
+              sx={{
+                mb: idx === feedbacks.length - 1 ? 0 : 0.5,
+              }}
+              severity="warning"
             >
-              (No speech detected yet…)
-            </Typography>
-          ) : (
-            feedbacks.map((line, idx) => (
               <Typography
-                key={idx}
-                variant={idx === feedbacks.length - 1 ? "h6" : "body1"}
+                component="span"
                 sx={{
                   wordBreak: "break-word",
-                  mb: idx === feedbacks.length - 1 ? 0 : 0.5,
+                  whiteSpace: "pre-line", // ← honor "\n" as line breaks
                 }}
               >
-                {line}
+                {`${original}\n${correction}\n\n${description}`}
               </Typography>
-            ))
-          )}
-        </Paper>
+            </Alert>
+          ))}
+        </Stack>
       </Stack>
     </Paper>
   );

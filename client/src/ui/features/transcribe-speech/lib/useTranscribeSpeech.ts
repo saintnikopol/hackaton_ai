@@ -11,24 +11,26 @@ export enum TranscriptionStatus {
   MICROPHONE_ACCESS_DENIED = "Microphone access denied",
 }
 
-interface WhisperMessage {
+export interface WhisperMessageSegment {
+  text: string;
+  completed: boolean;
+}
+
+export interface WhisperMessage {
   uid: string;
   status?: string;
   message?: string | number;
   language?: string;
-  segments?: Array<{
-    text: string;
-    completed: boolean;
-  }>;
+  segments?: Array<WhisperMessageSegment>;
 }
 
-export interface UseTranscribeSpeech {
-  onNewTranscriptionLine: (transcriptionLine: string) => void;
+export interface UseTranscribeSpeechProps {
+  onNewTranscriptionSegment: (newSegment: WhisperMessageSegment) => void;
 }
 
 export function useTranscribeSpeech({
-  onNewTranscriptionLine,
-}: UseTranscribeSpeech) {
+  onNewTranscriptionSegment,
+}: UseTranscribeSpeechProps) {
   const [isCapturing, setIsCapturing] = useState(false);
   const [status, setStatus] = useState<TranscriptionStatus>(
     TranscriptionStatus.INITIAL_STATUS,
@@ -196,7 +198,8 @@ export function useTranscribeSpeech({
 
     if (msg.segments && msg.segments.length > 0) {
       console.log(msg);
-      onNewTranscriptionLine(newLines[-1]);
+      console.log("segment to pass", msg.segments[msg.segments.length - 1]);
+      onNewTranscriptionSegment(msg.segments[msg.segments.length - 1]);
     }
   }
 

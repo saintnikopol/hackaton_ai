@@ -5,9 +5,12 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
+import { QueryProvider } from "./app/providers/query/index.ts";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <QueryProvider>
+      <App />
+    </QueryProvider>
   </StrictMode>,
 );
