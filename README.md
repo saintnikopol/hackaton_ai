@@ -1,13 +1,32 @@
 # Lancaster
 
-We are Team Lancaster. Our startup aims to help people that want to improve their language speaking skills (e.g.: English). We provide a virtual English Professor that will participate in day-to-day activities or join certain on-line meetings and will help the user speak better. For example when the user joins a Zoom meeting he/she will see a real-time live-feed with his/her transcription and eventual corrections. At the end he/she will get a summary in a video-format made by Miss Lancaster of the mistakes done at the time of the conversation plus general feedback
+## Running the app
 
-Future ideas: improvement our virtual English Teacher and make it work for real-life scenarios like for example using AI-enabled wearable or VR glasses.
+You would need to [install pnpm](https://pnpm.io/installation) first
 
----
+### Electron client
 
+1. Run `cd client; pnpm install; pnpm dev`
 
+### Generate lesson feedback
 
+1. Open third terminal and run `cd generate-lesson-text; pnpm install`
+2. Run `cp ./.env-example ./.env`, you would need to replace the openai key there with the actual one
+3. Run `pnpm dev`
 
+### Video gen
 
+1. Run `cd video-gen; npm install`
+2. Run `cp ./.env-example ./.env`, you would need to replace the fal key there with the actual one
+3. Run `npm run dev` to start the video gen service
 
+### Whisper live
+
+#### On MacOS M1 chips
+
+1. Run `docker build -t whisperlive-cpu -f docker/Dockerfile.cpu .`
+2. Run `docker run -it -p 9090:9090 whisperlive-cpu -d`
+
+#### On other platforms
+
+Check the instructions [here](https://github.com/collabora/WhisperLive?tab=readme-ov-file#whisper-live-server-in-docker)
