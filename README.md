@@ -1,5 +1,10 @@
 # Lancaster
 
+
+## Architecture
+
+![System Architecture](docs/architecture.image.latest.version.png)
+
 ## Running the app
 
 You would need to [install pnpm](https://pnpm.io/installation) first
